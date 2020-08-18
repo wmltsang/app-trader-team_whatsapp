@@ -1,0 +1,82 @@
+-- common apps to both tables by name, avg rating
+SELECT distinct name 
+      -- ,CAST(AVG(ROUND(Rating,2)) as DECIMAL(5,2)) as avg_rating
+FROM public.play_store_apps
+WHERE name IN ( SELECT DISTINCT Name from app_store_apps)
+GROUP BY Name
+ORDER BY 2 DESC;
+
+-- review counts---
+SELECT   primary_genre
+		 ,content_rating
+		 ,CAST(review_count as INT)
+FROM public.app_store_apps
+ORDER BY 3 DESC
+
+SELECT   genres
+		 ,content_rating
+		 ,CAST(review_count as INT)
+FROM public.play_store_apps
+ORDER BY 3 DESC
+
+
+SELECT DISTINCT content_rating
+FROM public.play_store_apps
+
+SELECT DISTINCT content_rating
+FROM public.app_store_apps
+
+
+
+select max(rating) 
+FROM public.play_store_apps
+order by price desc
+
+select  max(rating) 
+FROM public.app_store_apps
+order by price DESC
+
+SELECT x.name, 
+       x.price,
+	   x.content_rating,
+	   x.genres,
+	   RANK() OVER(ORDER BY price)
+FROM (
+	SELECT name, CAST(REPLACE(price,'$','') as DECIMAL(10,2)) as price, CAST(review_count as INT), rating, content_rating, genres
+	FROM public.play_store_apps
+	UNION
+	SELECT name, CAST(price as DECIMAL(10,2)) as price, CAST(review_count as INT), rating, content_rating, primary_genre as genres
+	FROM public.app_store_apps
+	)x
+	ORDER BY x.price DESC
+	
+	
+SELECT name, 
+       price,
+	   content_rating,
+	   genres,
+	   RANK() OVER(ORDER BY price DESC)	   
+	FROM public.play_store_apps
+WHERE name IN ( SELECT DISTINCT Name from app_store_apps)
+
+
+-- Expected Longevity --
+--rating * .05 = 1 year added
+/*CASE WHEN rating = 0 THEN '1 year' 
+WHEN rating = 0.5' --> 2 years
+WHEN rating = 1.0 --> 3 years
+WHEN rating = 1.5 --> 4 years
+WHEN rating = 2.0 --> 5 years
+WHEN rating = 2.5 --> 6 years
+WHEN rating = 3.0 --> 7 years
+WHEN rating = 3.5 --> 8 years
+WHEN rating = 4.0 --> 9 years
+WHEN rating = 4.5 --> 10 years
+WHEN rating = 5.0 --> 11 years
+END as 'expected_longevity'*/
+
+
+
+
+
+
