@@ -133,3 +133,23 @@ UNION
  where install_count>0
  order by rating desc, review_count desc
 
+--revenue for each app for app trader
+--revenus is fixed 5000/2 for app trader as developer retains half
+--profit for each app: 
+
+ select name, price, total_price, review_count, expected_longevity, rating, genres, install_count, ((5000/2-1000)*12*expected_longevity) as profit, (1000/install_count) as cost_per_user, (5000/2*(expected_longevity)*12/install_count) as revenue_per_user
+ from data
+ where install_count>0
+ order by rating desc, review_count desc, cost_per_user asc
+ 
+  --(revenue_per_user - cost_per_user) as profit_per_user
+  --(((5000/2-1000)*12*expected_longevity)-total_price) as profit, (1000/install_count) as cost_per_user, (5000/2*(expected_longevity)*12/install_count) as revenue_per_user, ((5000/2*(expected_longevity)*12/install_count)-(1000/install_count)) as profit_per_user
+ select distinct name, price, total_price, review_count, expected_longevity, rating, genres, install_count, (((5000/2-1000)*12*expected_longevity)-total_price) as profit
+ from data
+ where install_count>0 and review_count > 50
+ group by name, price, total_price, review_count, expected_longevity, rating, genres, install_count
+ order by profit desc, review_count desc, rating desc
+ 
+
+ 
+ 
