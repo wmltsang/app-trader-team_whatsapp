@@ -24,12 +24,15 @@ FROM public.play_store_apps
 
 SELECT DISTINCT content_rating
 FROM public.app_store_apps
+
 select max(rating) 
 FROM public.play_store_apps
 order by price desc
+
 select  max(rating) 
 FROM public.app_store_apps
 order by price DESC
+
 SELECT x.name, 
        x.price,
        x.content_rating,
@@ -58,25 +61,13 @@ INTO temp table data
 FROM (
     SELECT name, 
            --CAST(REPLACE(price,'$','') as DECIMAL(10,2)) as price, 
-            CAST(REPLACE(price,'$','') as NUMERIC(5,2)) as price,
-            CASE WHEN CAST(REPLACE(price,'$','') as decimal(5,2)) <= 1.00 THEN 10000
-                ELSE 10000 * CAST(REPLACE(price,'$','') as decimal(5,2))
+            CAST(REPLACE(price,'$','') as decimal) as price,
+            CASE WHEN CAST(REPLACE(price,'$','') as decimal) <= 1.00 THEN 10000
+                ELSE 10000 * CAST(REPLACE(price,'$','') as decimal)
             END as total_price,
             CAST(review_count as INT), 
             COALESCE(rating,0) as rating,
-            CASE WHEN rating = '0' THEN  '1'
-                 WHEN rating = '0.5' THEN '2' 
-                 WHEN rating = '1.0' THEN '3' 
-                 WHEN rating = '1.5' THEN '4' 
-                 WHEN rating = '2.0' THEN '5' 
-                 WHEN rating = '2.5' THEN '6' 
-                 WHEN rating = '3.0' THEN '7' 
-                 WHEN rating = '3.5' THEN '8' 
-                 WHEN rating = '4.0' THEN '9' 
-                 WHEN rating = '4.5' THEN '10' 
-                 WHEN rating = '5.0' THEN '11' 
-                ELSE 0
-                END as expected_longevity  ,
+            CAST(rating as decimal)*2+1 expected_longevity,  
             content_rating, 
             CAST(REPLACE(REPLACE(install_count,',',''),'+','') as int) as install_count,
             genres
@@ -84,31 +75,30 @@ FROM (
 UNION
     SELECT name, 
            --CAST(REPLACE(price,'$','') as DECIMAL(10,2)) as price, 
-             CAST(price as NUMERIC(5,2)) as price,
+             CAST(price as decimal) as price,
             CASE WHEN price <= 1.00 THEN 10000
-                ELSE 10000 * CAST(price as Decimal(5,2))
+                ELSE 10000 * CAST(price as Decimal)
             END as total_price,
             CAST(review_count as INT), 
             COALESCE(rating,0) as rating,
-            CASE WHEN rating = '0' THEN  '1'
-                 WHEN rating = '0.5' THEN '2' 
-                 WHEN rating = '1.0' THEN '3' 
-                 WHEN rating = '1.5' THEN '4' 
-                 WHEN rating = '2.0' THEN '5' 
-                 WHEN rating = '2.5' THEN '6' 
-                 WHEN rating = '3.0' THEN '7' 
-                 WHEN rating = '3.5' THEN '8' 
-                 WHEN rating = '4.0' THEN '9' 
-                 WHEN rating = '4.5' THEN '10' 
-                 WHEN rating = '5.0' THEN '11' 
-                ELSE 0
-                END as expected_longevity  ,
-            content_rating, 
+            CAST(rating as decimal)*2+1 expected_longevity,
+	        content_rating, 
            CAST(0 as int) as install_count,
            primary_genre as genres
     FROM public.app_store_apps
     )x
-    
+ 
+ALTER TABLE data
+ADD profit numeric;
+
+INSERT INTO data (profit)
+SELECT (5000/2-1000)* 12 * expected_longevity - total_price
+FROM data;
+
+select *
+from data
+where profit is not null;
+ 
     --DROP TABLE DATA
     --select * from data
     -- CHECK FOR DUPES -- 
@@ -144,12 +134,19 @@ UNION
  
   --(revenue_per_user - cost_per_user) as profit_per_user
   --(((5000/2-1000)*12*expected_longevity)-total_price) as profit, (1000/install_count) as cost_per_user, (5000/2*(expected_longevity)*12/install_count) as revenue_per_user, ((5000/2*(expected_longevity)*12/install_count)-(1000/install_count)) as profit_per_user
- select distinct name, price, total_price, review_count, expected_longevity, rating, genres, install_count, (((5000/2-1000)*12*expected_longevity)-total_price) as profit
+
+select distinct name, price, total_price, review_count,rating, genres, install_count, (((5000/2-1000)*12* (rating*2+1))-total_price) as profit
+from data
+where install_count>0 and review_count > 244602 
+group by name, price, total_price, review_count,rating, genres, install_count, profit
+	
+select distinct name, price, total_price, review_count,rating, genres, expected_longevity, install_count, profit,
+ RANK () OVER ( ORDER BY profit desc, review_count desc, rating desc, expected_longevity desc, install_count desc
+	) app_rank 
  from data
- where install_count>0 and review_count > 50
- group by name, price, total_price, review_count, expected_longevity, rating, genres, install_count
- order by profit desc, review_count desc, rating desc
- 
+ where install_count>0 and review_count > 244602 
+ group by name, price, total_price, review_count,rating, genres, expected_longevity, install_count, profit
 
  
+
  
