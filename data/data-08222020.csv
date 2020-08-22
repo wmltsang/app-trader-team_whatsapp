@@ -1,0 +1,5 @@
+type,count
+app_store_apps <= 1.00,4784
+play_store_apps <= 1.00,10191
+app_store_apps > 1.00,2413
+play_store_apps > 1.00,649
