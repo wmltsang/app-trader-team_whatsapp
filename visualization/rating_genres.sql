@@ -1,3 +1,4 @@
+ --temp table is easier to use than common table
  select x.* into temp table data from(
 	       SELECT p.name,
 				  p.genres,
@@ -48,6 +49,8 @@ ON p.name = a.name
 WHERE   a.price <= 1 and
          cast(replace(replace(p.price,'$',''),'.','') as numeric(10,2)) <= 1
  ) x
+
+
 --graph for common genres to both stores
 /*select genres, count(genres) as counts_genres
 from x
@@ -60,26 +63,27 @@ from x
 group by genres
 order by genres_installs desc*/
 
---common genres to both stores by ratings
-/*select distinct genres, count(genres) as cnt, user_stars
-from x
+--common genres to both stores by ratings and create a table in excel for visualization
+select distinct genres, count(genres) as cnt, user_stars
+from data
 group by genres, user_stars
-order by user_stars desc, cnt desc*/
+order by user_stars desc, cnt desc
 
 --nonaggregate fields need to be in groupby
+      
    
-SELECT genres, user_stars cnt
+/*SELECT genres, user_stars, cnt
 FROM (
-select  genres,
+select  distinct genres,
         user_stars,
-       COUNT(genres) as cnt
-       ,ROW_NUMBER() OVER(PARTITION BY  user_stars
-                                 ORDER BY user_stars DESC) AS rn
-from x
+       COUNT(genres) as cnt,
+       ROW_NUMBER() OVER(PARTITION BY  genres
+                                 ORDER BY count(genres) DESC) AS rn
+from data
 WHERE rn = 1
 group by genres, user_stars
 ) xx
-WHERE xx.rn = 1
+WHERE xx.rn = 1*/
 
 
 
