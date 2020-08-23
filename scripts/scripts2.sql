@@ -96,9 +96,19 @@ WHERE   a.price <= 1 and
  )
 
 
--- select * from x
+
+select  genres, 
+        user_stars,  
+       COUNT(genres) as cnt
+       ,ROW_NUMBER() OVER(PARTITION BY  genres, user_stars
+                                 ORDER BY user_stars DESC) AS rn
+from x
+WHERE rn = 1
+group by genres, user_stars 
+ORDER BY user_stars DESC
 
 
+-- Top 10 --- 
 SELECT name, 
 	   genres,
 	  total_reviews, 
@@ -118,23 +128,37 @@ WHERE rn = 1
 ORDER BY user_years desc;
 
 
--- Count of App store apps by Genre -- 	
-SELECT 'play store apps' as type,
+
+-- Count of play store apps by Genre -- 	
+SELECT 'play store apps' as store_type,
        genres, 
 	   COUNT(*) as Total
 FROM public.play_store_apps
 GROUP BY genres
 ORDER BY Total DESC
+LIMIT 20;
 
--- Count of Play store Approx. users, review count by app -- 
-SELECT 'play store app' as title,
-       a.name,
-       SUM(cast(a.review_count as numeric(10,0)) * 25.5) as ApproxUserCnt,
-       SUM(review_count),
+-- Count of app store apps by Genre -- 
+SELECT 'app store apps' as store_type,
+       primary_genre, 
+	   COUNT(*) as Total
+FROM public.app_store_apps
+GROUP BY primary_genre
+ORDER BY Total DESC
+
+
+-- Count of Play store Approx. users, genres, review count by app -- 
+SELECT 'play store app' as store_type,
+        a.genres,
+		a.name,
+       --SUM(cast(a.review_count as numeric(10,0)) * 25.5) as ApproxUserCnt,
+	   SUM(CAST(replace(replace(Install_count,'+',''),',','') as int))as  ApproxUserCnt ,
+       SUM(review_count) as reviewCnt,
+	
 	   ROW_NUMBER() OVER (Partition by a.name) as rn
 FROM public.play_store_apps a
-GROUP BY a.name
-ORDER BY 3 DESC
+GROUP BY a.name, a.genres
+ORDER BY 4 DESC
 
 
 
