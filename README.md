@@ -47,3 +47,5 @@ c. Prepare a 5-10 minute presentation for the leadership team of App Trader to i
 
 
 ### All analysis work must be done in PostgreSQL, however you may export query results if you want to create charts in Excel for your presentations.
+
+123
